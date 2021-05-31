@@ -11,7 +11,7 @@ import java.util.List;
 
 public class RunStudentApps {
 
-    public static void main(String[] args) throws SQLException {
+    public static void main(String[] args) {
         FileProcessorImpl fileProcessorImpl = new FileProcessorImpl();
 
         String [] studentArrData = fileProcessorImpl.readFileData("src/main/resources/studentData.txt");
@@ -32,7 +32,8 @@ public class RunStudentApps {
         }*/
 
         StudentData studentData = new StudentData();
-        studentData.addStudent();
+       // studentData.addStudent();
+        studentData.updateExamStatus( "No entry");
 
     }
 

@@ -14,30 +14,32 @@ import java.util.logging.Level;
 
 public class StudentData {
     StudentRepository studentRepository;
-    
+    DBConnection dbConnection = new DBConnection();
+
+
     private StudentEntity extractStudentFromFile(String studentFromFile) {
         StudentEntity studentEntity = new StudentEntity();
-        
-        String firstCmStr = studentFromFile.substring(studentFromFile.indexOf(",")+1);
-            String firstName = studentFromFile.substring(0,studentFromFile.indexOf(",")).trim();
-            studentEntity.setName(firstName);
 
-            String scndtCmStr = firstCmStr.substring(firstCmStr.indexOf(",")+1).trim();
+        String firstCmStr = studentFromFile.substring(studentFromFile.indexOf(",") + 1);
+        String firstName = studentFromFile.substring(0, studentFromFile.indexOf(",")).trim();
+        studentEntity.setName(firstName);
 
-            String lastName = firstCmStr.substring(0,firstCmStr.indexOf(",")).trim();
+        String scndtCmStr = firstCmStr.substring(firstCmStr.indexOf(",") + 1).trim();
+
+        String lastName = firstCmStr.substring(0, firstCmStr.indexOf(",")).trim();
         studentEntity.setSurname(lastName);
 
-            int assignment_1 = Integer.valueOf(scndtCmStr.substring(0, scndtCmStr.indexOf(",")));
+        int assignment_1 = Integer.valueOf(scndtCmStr.substring(0, scndtCmStr.indexOf(",")));
         studentEntity.setAssignment1(assignment_1);
 
-            String trdtCmStr = scndtCmStr.substring(scndtCmStr.indexOf(",")+1).trim();
+        String trdtCmStr = scndtCmStr.substring(scndtCmStr.indexOf(",") + 1).trim();
 
-            int assignment_2 = Integer.valueOf(trdtCmStr.substring(0, trdtCmStr.indexOf(",")));
+        int assignment_2 = Integer.valueOf(trdtCmStr.substring(0, trdtCmStr.indexOf(",")));
         studentEntity.setAssignment2(assignment_2);
 
-            String frthCmStr = trdtCmStr.substring(trdtCmStr.indexOf(",")+1).trim();
+        String frthCmStr = trdtCmStr.substring(trdtCmStr.indexOf(",") + 1).trim();
 
-            int assignment_3 = Integer.valueOf(frthCmStr.substring(0, frthCmStr.indexOf(",")));
+        int assignment_3 = Integer.valueOf(frthCmStr.substring(0, frthCmStr.indexOf(",")));
         studentEntity.setAssignment3(assignment_3);
 
         studentEntity.setYearMark(0);
@@ -45,7 +47,6 @@ public class StudentData {
 
         return studentEntity;
     }
-        
 
     public void addStudent() throws SQLException {
         DBConnection dbConnection = new DBConnection();
@@ -55,14 +56,14 @@ public class StudentData {
 
 
         try {
-            String [] studentFromFile = fileProcessorImpl.readFileData("src/main/resources/studentData.txt");
+            String[] studentFromFile = fileProcessorImpl.readFileData("src/main/resources/studentData.txt");
 
             System.out.println(studentFromFile.length);
             String sql = "INSERT INTO public.student (name, surname, assignment1, assignment2, assignment3, yearMark, examEntranceStatus) VALUES (?,?,?,?,?,?,?)";
 
             PreparedStatement preparedStatement = connection.prepareStatement(sql);
 
-            for(int a = 0;a < studentFromFile.length-1; a++){
+            for (int a = 0; a < studentFromFile.length - 1; a++) {
 
                 StudentEntity studentEntityObject = extractStudentFromFile(studentFromFile[a]);
 
@@ -76,9 +77,8 @@ public class StudentData {
                 preparedStatement.setString(7, studentEntityObject.getExamEntranceStatus());
 
 
-                  preparedStatement.executeUpdate();
+                preparedStatement.executeUpdate();
             }
-
 
 
         } catch (Exception e) {
@@ -90,7 +90,6 @@ public class StudentData {
     }
 
     public List<String> getStudent(String letter) {
-        //Optional<StudentEntity> studentEntity = Optional.empty();
 
         DBConnection dbConnection = new DBConnection();
 
@@ -105,13 +104,11 @@ public class StudentData {
                 ResultSet resultSet = stmt.executeQuery(sql)) {
 
 
-
-
             while (resultSet.next()) {
 
                 String surname = resultSet.getString("surname");
                 System.out.println(surname);
-                if(surname.substring(0,1).equalsIgnoreCase("G")) {
+                if (surname.substring(0, 1).equalsIgnoreCase("G")) {
 
                     int id = resultSet.getInt("id");
                     String name = resultSet.getString("name");
@@ -121,11 +118,9 @@ public class StudentData {
                     int yearMark = resultSet.getInt("yearMark");
                     String examEntranceStatus = resultSet.getString("examEntranceStatus");
 
-                    studentToBeDisplayed.add("name: "+name +", surname" + surname +", assignment1" +assignment1 +", assignment2" +assignment2+ ", assignment3" +assignment3 + ", yearMark" + yearMark +", examEntranceStatus " + examEntranceStatus);
+                    studentToBeDisplayed.add("name: " + name + ", surname" + surname + ", assignment1" + assignment1 + ", assignment2" + assignment2 + ", assignment3" + assignment3 + ", yearMark" + yearMark + ", examEntranceStatus " + examEntranceStatus);
 
                 }
-
-
 
 
             }
@@ -136,22 +131,48 @@ public class StudentData {
         return studentToBeDisplayed;
 
     }
-    DBConnection dbConnection = new DBConnection();
 
-    public void updateStudent (String surname, String newSurname) {
+    public void updateStudent(int id, String newSurname) {
 
-        String sql = "UPDATE student SET surname = ? WHERE surname = ?";
+        String updateSurnameSQL = "UPDATE student SET surname = ? where id = ? ";
 
-        try (PreparedStatement statement = dbConnection.connectToDB().prepareStatement(sql)) {
+        try (PreparedStatement statement = dbConnection.connectToDB().prepareStatement(updateSurnameSQL)) {
 
-            statement.setString(1, surname);
-            statement.setString(2, newSurname);
+            statement.setString(1, newSurname);
+            statement.setInt(2, id);
+
 
             int numberOfUpdatedRows = statement.executeUpdate();
 
+            if (numberOfUpdatedRows > 0) {
+                System.out.println(numberOfUpdatedRows + " records updated successfully");
+            } else {
+                System.out.println("Records not updated");
+            }
 
 
-            //System.out.println("updated successfully");
+        } catch (SQLException ex) {
+            System.out.println(ex.getMessage());
+
+        }
+    }
+
+    public void updateExamStatus (String examEntranceStatus) {
+
+        String updateExamSQL = "UPDATE student SET examentrancestatus = ? WHERE examentrancestatus is null";
+
+        try (PreparedStatement statement = dbConnection.connectToDB().prepareStatement(updateExamSQL)) {
+
+            statement.setString(1, examEntranceStatus);
+
+            int numberOfUpdatedRows = statement.executeUpdate();
+
+            if (numberOfUpdatedRows > 0) {
+                System.out.println(numberOfUpdatedRows + " records updated successfully");
+            } else {
+                System.out.println("Records not updated");
+            }
+
 
         } catch (SQLException ex) {
             System.out.println(ex.getMessage());
@@ -160,10 +181,56 @@ public class StudentData {
     }
 
 
-        public void deleteStudent(String studentName) {
+    public void deleteStudent(int id) {
 
+
+        String deleteSQL = "delete From student where id = ? ";
+
+        try (PreparedStatement statement = dbConnection.connectToDB().prepareStatement(deleteSQL)) {
+
+            statement.setInt(1, id);
+
+
+            int numberOfUpdatedRows = statement.executeUpdate();
+
+            if (numberOfUpdatedRows > 0) {
+                System.out.println("Records deleted successfully");
+            } else {
+                System.out.println("Records not updated");
+            }
+
+
+        } catch (SQLException ex) {
+            System.out.println(ex.getMessage());
 
         }
+
+
+    }
+
+    public void updateYearMark (String examEntranceStatus) {
+
+        String updateYearMarkSQL = "UPDATE student SET yearmark = ? WHERE student.yearmark is null";
+
+        try (PreparedStatement statement = dbConnection.connectToDB().prepareStatement(updateYearMarkSQL)) {
+
+            statement.setString(1, examEntranceStatus);
+
+            int numberOfUpdatedRows = statement.executeUpdate();
+
+            if (numberOfUpdatedRows > 0) {
+                System.out.println(numberOfUpdatedRows + " records updated successfully");
+            } else {
+                System.out.println("Records not updated");
+            }
+
+
+        } catch (SQLException ex) {
+            System.out.println(ex.getMessage());
+
+        }
+    }
+
 
 
 }
